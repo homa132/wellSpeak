@@ -14,6 +14,11 @@ app.use(fileM.single('audio'));
 const parserAudio = bodyParser.raw({ type: 'audio/wav',limit: '50mb'});
 const parseJson = bodyParser.json();
 
+app.get('/',(req,res) => {
+    res.send('hello pidor')
+})
+
+
 app.post('/',parseJson,(req,res) => {
     const TextToSpeechV1 = require('ibm-watson/text-to-speech/v1');
 
