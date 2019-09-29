@@ -15,7 +15,7 @@ const parserAudio = bodyParser.raw({ type: 'audio/wav',limit: '50mb'});
 const parseJson = bodyParser.json();
 
 app.get('/',(req,res) => {
-    res.render('./index.html')
+    res.sendfile(path.join(__dirname,'./index.html'))
 })
 
 
