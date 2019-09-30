@@ -8,7 +8,7 @@ const fileM = require('./middleware/file');
 const buffer = require('buffer').Buffer;
 
 
-const PORT = process.env.PORT || 80;
+const PORT = process.env.PORT || 4000;
 app.use('/audio',express.static(path.join(__dirname,'staticP')));
 app.use(fileM.single('audio'));
 const parserAudio = bodyParser.raw({ type: 'audio/wav',limit: '50mb'});
