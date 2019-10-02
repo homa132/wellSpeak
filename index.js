@@ -29,7 +29,7 @@ app.post('/',parseJson,(req,res) => {
     
     const params = {
     text: req.body.firstParam,
-    voice: 'en-US_AllisonVoice',
+    voice: 'en-GB_KateV3Voice',
     accept: 'audio/mp3'
     };
 
