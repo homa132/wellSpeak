@@ -59,7 +59,7 @@ app.post('/post',parserAudio, async (req,res) => {
           
           const params = {
             audio: fs.createReadStream(path.join(__dirname,`staticP/${name}.wav`)),
-            content_type: 'audio/l16;rate=16000'
+            content_type: 'audio/wav'
           };
           
           speechToText.recognize(params)
