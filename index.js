@@ -8,10 +8,12 @@ const fileM = require('./middleware/file');
 const buffer = require('buffer').Buffer;
 
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 80;
 app.use('/audio',express.static(path.join(__dirname,'staticP')));
 app.use(fileM.single('audio'));
 const parserAudio = bodyParser.raw({ type: 'audio/wav',limit: '50mb'});
+const parserAudioAndroid = bodyParser.raw({ type: 'audio/mpeg',limit: '50mb'});
+
 const parseJson = bodyParser.json();
 
 app.get('/',(req,res) => {
@@ -21,10 +23,11 @@ app.get('/',(req,res) => {
 
 app.post('/',parseJson,(req,res) => {
     const TextToSpeechV1 = require('ibm-watson/text-to-speech/v1');
-
+    console.log('text to speech');
+    
     const textToSpeech = new TextToSpeechV1({
-    iam_apikey: 'Rnrlq5c05WhxJC7ySxxixEab-tNoR0GzMoX-lTKGy9P4',
-    url: 'https://stream-fra.watsonplatform.net/text-to-speech/api'
+    iam_apikey: 'azXITHfLBN0qzaaWNa0nQKQq4so4zE_ATJHNH43QND4i',
+    url: 'https://gateway-lon.watsonplatform.net/text-to-speech/api'
     });
     
     const params = {
@@ -46,6 +49,7 @@ app.post('/',parseJson,(req,res) => {
 
 app.post('/post',parserAudio, async (req,res) => {
     const data = req.body.toString();
+    console.log('speech to text ios');
     
     const SpeechToTextV1 = require('ibm-watson/speech-to-text/v1');
     const random = Math.floor(Math.random() * 1000000000).toString();
@@ -53,7 +57,7 @@ app.post('/post',parserAudio, async (req,res) => {
     
     fs.writeFile(path.join(__dirname,`staticP/${name}.wav`),data,"base64",(err,resr) => {
         const speechToText = new SpeechToTextV1({
-            iam_apikey: 'jmpFvkhJcKyPz5ervIVHH-rcFsmZZV-8LqsTBWB1NbFx',
+            iam_apikey: 'xGqU5meVAHz4dosthc3lrZWHLPx5et__x5YOxecVIWRQ',
             url: 'https://gateway-lon.watsonplatform.net/speech-to-text/api'
           });
           
@@ -75,6 +79,73 @@ app.post('/post',parserAudio, async (req,res) => {
     })
 })
 
+app.post('/android',parserAudioAndroid, async (req,res) => {
+    const SpeechToTextV1 = require('ibm-watson/speech-to-text/v1');
+    console.log('speech to text android');
+
+    const data = req.body.toString()
+    const random = Math.floor(Math.random() * 1000000000).toString();
+    const name = buffer.from(random,'ascii').toString('base64');
+    console.log('errorecs');
+
+    fs.writeFile(path.join(__dirname,`staticP/${name}.m4a`),data,"base64",(err,resr) => {
+        console.log('error',err);
+        
+        convertFileFormat(path.join(__dirname,`staticP/${name}.m4a`), path.join(__dirname,`staticP/${name}.wav`), function (errorMessage) {
+        }, null, function () {
+
+            const speechToText = new SpeechToTextV1({
+                iam_apikey: 'xGqU5meVAHz4dosthc3lrZWHLPx5et__x5YOxecVIWRQ',
+                url: 'https://gateway-lon.watsonplatform.net/speech-to-text/api'
+              });
+              
+              const params = {
+                audio: fs.createReadStream(path.join(__dirname,`staticP/${name}.wav`)),
+                content_type: 'audio/wav'
+              };
+              
+              speechToText.recognize(params)
+                .then(result => {
+                    fs.unlink(path.join(__dirname,`staticP/${name}.wav`),() => {
+                        fs.unlink(path.join(__dirname,`staticP/${name}.m4a`),(err) => console.log(err));
+                        res.send(JSON.stringify(result));
+                        res.end();
+                    })
+                })
+                .catch(err => {
+                  console.log(err);
+                });
+        });
+    })
+
+})
+
+function convertFileFormat(file, destination, error, progressing, finish) {
+    const ffmpeg = require('fluent-ffmpeg');
+
+    ffmpeg(file)
+        .on('error', (err) => {
+            console.log('An error occurred: ' + err.message);
+            if (error) {
+                error(err.message);
+            }
+        })
+        .on('progress', (progress) => {
+            // console.log(JSON.stringify(progress));
+            console.log('Processing: ' + progress.targetSize + ' KB converted');
+            if (progressing) {
+                progressing(progress.targetSize);
+            }
+        })
+        .on('end', () => {
+            console.log('converting format finished !');
+            if (finish) {
+                finish();
+            }
+        })
+        .save(destination);
+    
+        }
 
 
 async function start () {
